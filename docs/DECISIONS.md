@@ -16,3 +16,5 @@
 | PC 우선 | 모바일은 MVP에서 깨지지 않을 정도만 |
 | ~~GPL-3.0~~ → AGPL-3.0 | RisuAI(GPL-3.0) 코드를 포팅하고, risum에 필요한 rpack이 RisuAI 밖에서는 AGPL-3.0이라서. 서버 없는 정적 사이트라 AGPL 추가 의무는 사실상 충족 |
 | charx 내보내기 시 `character_book`을 module 로어북에서 다시 생성 | RisuAI 내보내기와 결과를 같게 하고, 다른 앱에서도 편집된 로어북이 보이게 하기 위해. 변환은 `exportCharacterCard`의 로어북 변환을 포팅 |
+| IndexedDB 래퍼는 `idb` | workspace·스냅샷·보존 payload·draft를 여러 object store에 걸친 한 트랜잭션으로 교체해야 해요. 간단한 키·값 접근 위주인 idb-keyval보다 이 원자적 교체를 직접 표현하기 좋아요 |
+| Phase 0 TypeScript는 최신 호환 안정판 6 사용 | npm 최신 TypeScript 7은 현재 svelte-check 4.7.6의 peer 범위(`^5.0.0 \|\| ^6.0.0`) 밖이에요. 검사 도구와 호환되는 6의 최신 안정판을 사용하고, 7 지원이 추가되면 함께 올려요 |
