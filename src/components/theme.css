@@ -1,0 +1,176 @@
+/* SoleneEditor design tokens and base controls.
+   Scoped to .solene so the component tree can be embedded without leaking styles. */
+
+.solene {
+  /* Paper & ink (light) */
+  --bg: #f5f3ee;
+  --surface: #fffdf9;
+  --sunken: #eeebe4;
+  --raised: #ffffff;
+  --text: #211f1b;
+  --text-soft: #4a463f;
+  --muted: #837d72;
+  --faint: #b3ada2;
+  --border: #e3ded4;
+  --border-strong: #cfc8bb;
+  --accent: #5a4bc0;
+  --accent-hover: #4a3cab;
+  --accent-soft: #ecebfb;
+  --accent-text: #ffffff;
+  --danger: #b4322a;
+  --danger-soft: #fbeceb;
+  --warning: #9a5b00;
+  --warning-soft: #fdf1dc;
+  --success: #2f7a4d;
+  --selection: #d9d5fb;
+  --shadow: 0 1px 2px rgb(40 32 20 / .05), 0 8px 24px rgb(40 32 20 / .07);
+  --shadow-lg: 0 2px 6px rgb(40 32 20 / .06), 0 24px 64px rgb(40 32 20 / .16);
+
+  --font-ui: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', D2Coding, 'Cascadia Code', Consolas, ui-monospace, monospace;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Moonlit ink (dark) */
+.solene[data-theme='dark'] {
+  --bg: #131219;
+  --surface: #1a1922;
+  --sunken: #111017;
+  --raised: #22212c;
+  --text: #ebe8f3;
+  --text-soft: #c9c5d6;
+  --muted: #8f8aa1;
+  --faint: #5c586b;
+  --border: #2b2936;
+  --border-strong: #3b3848;
+  --accent: #a99cff;
+  --accent-hover: #bdb3ff;
+  --accent-soft: #28234a;
+  --accent-text: #15121f;
+  --danger: #ff8f86;
+  --danger-soft: #3a1d1f;
+  --warning: #f0b95c;
+  --warning-soft: #37290f;
+  --success: #7fd3a0;
+  --selection: #3d3670;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .3);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / .35), 0 24px 64px rgb(0 0 0 / .5);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .solene[data-theme='system'] {
+    --bg: #131219;
+    --surface: #1a1922;
+    --sunken: #111017;
+    --raised: #22212c;
+    --text: #ebe8f3;
+    --text-soft: #c9c5d6;
+    --muted: #8f8aa1;
+    --faint: #5c586b;
+    --border: #2b2936;
+    --border-strong: #3b3848;
+    --accent: #a99cff;
+    --accent-hover: #bdb3ff;
+    --accent-soft: #28234a;
+    --accent-text: #15121f;
+    --danger: #ff8f86;
+    --danger-soft: #3a1d1f;
+    --warning: #f0b95c;
+    --warning-soft: #37290f;
+    --success: #7fd3a0;
+    --selection: #3d3670;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .3);
+    --shadow-lg: 0 2px 6px rgb(0 0 0 / .35), 0 24px 64px rgb(0 0 0 / .5);
+    color-scheme: dark;
+  }
+}
+
+.solene *, .solene *::before, .solene *::after { box-sizing: border-box; }
+.solene ::selection { background: var(--selection); }
+.solene :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Buttons */
+.solene button {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  height: 2.1rem;
+  padding: 0 .8rem;
+  color: var(--text-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease);
+}
+.solene button:hover:not(:disabled) { background: var(--sunken); color: var(--text); }
+.solene button:disabled { opacity: .45; cursor: not-allowed; }
+.solene button.outline { border-color: var(--border-strong); background: var(--surface); }
+.solene button.outline:hover:not(:disabled) { border-color: var(--muted); background: var(--surface); }
+.solene button.primary { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.solene button.primary:hover:not(:disabled) { background: var(--accent-hover); color: var(--accent-text); }
+.solene button.danger { color: var(--danger); }
+.solene button.danger:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
+.solene button.danger.solid { background: var(--danger); color: #fff; font-weight: 600; }
+.solene button.icon { width: 2.1rem; padding: 0; }
+.solene button.small { height: 1.8rem; padding: 0 .6rem; font-size: .85rem; }
+
+/* Inputs */
+.solene input:not([type='checkbox']):not([type='file']),
+.solene textarea,
+.solene select {
+  font: inherit;
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .55rem .7rem;
+  transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
+}
+.solene input:not([type='checkbox']):hover, .solene textarea:hover, .solene select:hover { border-color: var(--border-strong); }
+.solene input:not([type='checkbox']):focus, .solene textarea:focus, .solene select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.solene input:disabled, .solene textarea:disabled, .solene select:disabled { opacity: .6; }
+.solene input::placeholder, .solene textarea::placeholder { color: var(--faint); }
+.solene textarea { resize: vertical; line-height: 1.7; }
+.solene .mono { font-family: var(--font-mono); font-size: .88em; }
+
+.solene .hint { color: var(--muted); font-size: .82rem; line-height: 1.55; }
+.solene .badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.25rem;
+  padding: 0 .45rem;
+  font-size: .72rem;
+  font-weight: 600;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  white-space: nowrap;
+}
+.solene .badge.neutral { color: var(--muted); background: var(--sunken); }
+.solene .badge.warn { color: var(--warning); background: var(--warning-soft); }
+
+/* Quiet scrollbars */
+.solene, .solene * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
