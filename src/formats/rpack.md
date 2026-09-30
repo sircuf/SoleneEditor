@@ -16,6 +16,8 @@
 - 테이블을 TS 상수(`Uint8Array`)로 넣으면 fetch 없이 동기로 동작해요.
 - 테스트: 0~255 전체 바이트에 대해 `decode(encode(x)) === x`.
 
+`rpack.ts`의 내부 table 상수는 위 참조 바이너리의 512바이트를 그대로 옮겼어요. `encodeRPack`과 `decodeRPack`은 동기 함수이고 새 Uint8Array를 반환해요. fetch·초기화 함수 없이 동작하고 입력을 바꾸지 않아요.
+
 ## ⚠️ 라이선스
 
 rpack은 **MIT / AGPL-3.0 듀얼 라이선스**예요. MIT는 "RisuAI 안에서만 쓸 때"에만 적용되고,

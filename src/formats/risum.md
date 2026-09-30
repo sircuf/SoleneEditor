@@ -78,3 +78,11 @@ interface triggerscript {
 
 JSON 본문은 우리가 다시 직렬화하니 바이트가 같을 필요는 없어요. 비교 기준은
 **파싱한 객체가 같고, 에셋 블록 바이트가 같은 것**이에요.
+
+## 구현 API와 오류
+
+`risum`은 `FormatCodec<'risum'>`이에요. detect는 `.risum` 확장자나 `[111, 0]` 헤더로 후보를 찾고 parse가 버전과 실제 구조를 확인해요. ASCII o로 시작하는 일반 텍스트는 헤더 후보로 취급하지 않아요. JSON root 전체를 `doc.module` envelope로 유지해서 최상위의 알 수 없는 키도 남아요. 원본 id와 optional 필드의 부재를 유지하고, build는 envelope를 2칸 들여쓰기로 직렬화해요.
+
+보존 payload의 `risum:block:N` 항목에는 표시 바이트·길이·인코딩된 데이터까지 에셋 블록 전체를 담아요. build에서는 이를 그대로 이어 붙여요. `assetReferences` 메타데이터로 참조 배열의 변경·삭제·추가·순서 변경을 막아요. 바이너리를 디코딩하거나 재압축하지 않아요.
+
+잘린 헤더·본문·블록, 잘못된 표시, 종료 표시 부재와 종료 뒤 데이터는 `invalid-container`예요. 버전이 0이 아니면 `unsupported-version`, envelope·module 객체나 목록 뼈대가 깨지면 `missing-required-data`예요. UTF-8 또는 JSON 오류는 `invalid-json`이에요. 본문 type·scalar 불일치·필드 부재는 가져온 뒤 validate에서 알려요. 읽을 수 있는 에셋 블록은 참조 개수와 달라도 모두 보관하고, 개수 불일치는 build에서 `preserved-payload-mismatch`로 중단해요. 어떤 데이터도 조용히 버리지 않아요.
