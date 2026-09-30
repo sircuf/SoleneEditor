@@ -45,3 +45,17 @@ RisuAI가 내보낼 때는 정규식·트리거를 card.json에서 **지우고**
 `name, description, personality, scenario, first_mes, mes_example, creator_notes, system_prompt,
 post_history_instructions, alternate_greetings[], character_book, tags[], creator, character_version,
 extensions.risuai.{...}` 등. 폼에는 주요 텍스트 필드만, 나머지는 JSON 모드에서 편집해요.
+
+## 구현 API와 보존 메타데이터
+
+`charx`는 `FormatCodec<'charx'>`이에요. `.charx` 확장자·ZIP 헤더 또는 JPEG 뒤의 유효한 ZIP 디렉터리로 후보를 판별해요. parse는 ZIP32 중앙 디렉터리와 로컬 헤더를 확인하고 fflate `unzipSync`로 내용을 읽어요. JPEG 안의 우연한 PK 바이트를 ZIP 시작점으로 오인하지 않도록 중앙 디렉터리 오프셋으로 접두부를 구분해요. 상대 오프셋과 JPEG를 포함한 절대 오프셋을 모두 읽을 수 있어요.
+
+payload에는 JPEG 접두부, 원래 이름의 기타 ZIP 항목, 중첩 module의 risum 에셋 블록을 따로 담아요. 메타데이터의 index로 이들을 구분해서 항목 이름이 내부 식별자와 같아도 충돌하지 않아요. 원래 로컬 헤더 순서를 보관하고 동기 fflate Zip/ZipDeflate로 같은 순서에 다시 써요. 숫자로만 된 이름도 순서가 바뀌지 않아요. 압축 방식·ZIP 메타데이터는 달라질 수 있지만 항목 이름과 내용 바이트는 유지해요. RisuAI가 무시하는 기타 JSON이나 큰 에셋도 편집기는 버리지 않아요.
+
+module 있는 카드는 RisuAI `characterCards.ts` 1571~1600행의 변환을 따라 keys·secondary_keys·확률·캐시·대소문자 설정 등을 entries에 다시 반영해요. 카드와 책의 다른 필드는 복사본에서 그대로 유지하고 원본 입력은 바꾸지 않아요. module 로어북이 비어 있고 원래 책이 없었다면 책을 불필요하게 만들지 않아요.
+
+기존 CCv3 항목의 알 수 없는 키와 extensions는 대응하는 Risu 항목에 남겨요. 원본 module 로어북을 provenance로 보관해서 유일한 id, 변하지 않은 항목, 유일한 key/comment 순으로 대응시켜요. 식별할 수 없는 편집은 항목 수가 같은 경우 원래 위치를 사용해요. id 없는 항목을 동시에 크게 바꾸고 재배열하면 대응을 확정할 수 없으므로 UI는 기존 id를 보존해야 해요.
+
+카드의 assets와 Risu 확장의 emotions·additionalAssets·vits 참조 및 module의 에셋 참조를 원본과 비교해 변경을 거부해요. module의 존재 여부도 바꿀 수 없어요. 파일을 다른 문서 종류로 바꾸려면 새로 가져와야 해요.
+
+ZIP64·다중 디스크·암호화 ZIP과 중복 파일명은 현재 지원하지 않아요. ZIP64는 `unsupported-version`, 나머지 잘못된 컨테이너는 `invalid-container`로 실패해요. `card.json` 부재나 card/data·module·목록 뼈대가 편집 불가능하면 `missing-required-data`예요. scalar 불일치나 V3가 아닌 spec도 뼈대가 있으면 그대로 가져오고 validate에서 알려요. 중복 항목을 덮어쓰거나 모르는 데이터를 조용히 버리지 않아요.
