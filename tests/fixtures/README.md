@@ -18,6 +18,16 @@
 node tests/fixtures/generate-synthetic.mjs <RisuAI>/src/ts/rpack/rpack_map.bin
 ```
 
-## real/ (실제, 예정)
+## real/ (실제)
 
-실제 RisuAI에서 내보낸 파일. 호환성의 최종 기준이에요. 공개해도 되는 파일만 넣어요.
+RisuAI(main @ `f9728b1`)를 로컬 개발 모드로 띄우고 RisuAI 자체 내보내기 코드로 만든 파일이에요. 호환성의 최종 기준이에요.
+
+| 파일 | 만든 함수 |
+|---|---|
+| `risuai-sample.charx` | `exportCharacterCard(char, 'charx', { spec: 'v3' })` |
+| `risuai-sample.risum` | `exportModuleLegacy(module)` |
+| `risuai-sample.lorebook.json` | `exportLoreBook('global')` |
+
+내용은 샘플용으로 직접 만든 캐릭터·모듈이라 공개해도 괜찮아요. 카드의 `character_version: "undefined"`처럼 RisuAI가 실제로 쓰는 값이 그대로 들어 있어요.
+
+SoleneEditor로 편집해 내보낸 세 파일을 RisuAI의 `readModule`, `importCharacterProcess`로 다시 읽어서 편집 내용·정규식·트리거·이미지가 유지되는 것도 확인했어요 (2026-09-30).
