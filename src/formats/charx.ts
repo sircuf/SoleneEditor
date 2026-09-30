@@ -1,7 +1,7 @@
 // Container reference: kwaroran/RisuAI src/ts/process/processzip.ts,
 // CharXImporter / CharXWriter, and src/ts/characterCards.ts L81-165
 // (main @ f9728b1, GPL-3.0). Unlike its importer, retain ALL other ZIP entries.
-import { strFromU8, unzipSync, Zip, ZipDeflate } from 'fflate';
+import { strFromU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate';
 import { FormatError } from '$contracts';
 import type {
   CharacterBookEntry, CharacterCardV3, FormatCodec, JsonObject,
@@ -14,6 +14,7 @@ import {
 } from './shared';
 
 const schema = 'solene-charx-v1';
+const compressedExtension = /\.(png|jpe?g|webp|gif|avif|mp3|ogg|opus|flac|aac|m4a|mp4|m4v|webm|zip|gz|bz2|xz|7z|rar|woff2)$/i;
 
 interface ZipLayout {
   base: number;
@@ -82,7 +83,9 @@ function writeZip(entries: readonly PreservedEntry[]): Uint8Array {
   });
   try {
     for (const entry of entries) {
-      const file = new ZipDeflate(entry.name, { level: 0 });
+      const file = compressedExtension.test(entry.name)
+        ? new ZipPassThrough(entry.name)
+        : new ZipDeflate(entry.name, { level: 6 });
       zip.add(file);
       file.push(entry.bytes, true);
     }

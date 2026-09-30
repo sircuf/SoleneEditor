@@ -31,6 +31,8 @@ export const createEditorStores: CreateEditorStores = ({ storage, services, form
   let draftTail: Promise<unknown> = Promise.resolve();
   let revision = 0;
   let disposed = false;
+  let disposal: Promise<void> | null = null;
+  let exclusiveWork: Promise<void> = Promise.resolve();
 
   const workspaceStore = writable<WorkspaceView>({ record: null, tabs: [], lorebookFormat: null });
   const uiStore = writable(immutable(currentUi));
@@ -122,21 +124,27 @@ export const createEditorStores: CreateEditorStores = ({ storage, services, form
     else { currentUi.activeTab = null; currentUi.selectedIndex = null; publishUi(); }
   }
   function startIntervals() {
+    if (disposed) return;
     services.snapshot.start(() => record ? structuredClone(record) : null, surface);
   }
-  async function exclusive<T>(busy: NonNullable<UiState['busy']>, operation: () => Promise<T>): Promise<T> {
+  function exclusive<T>(busy: NonNullable<UiState['busy']>, operation: () => Promise<T>): Promise<T> {
     gate();
     currentUi.busy = busy;
     publishUi();
-    try {
-      await services.snapshot.stop();
-      await draftTail;
-      return await operation();
-    } finally {
-      currentUi.busy = null;
-      publishUi();
-      if (!disposed) startIntervals();
-    }
+    const result = (async () => {
+      try {
+        await services.snapshot.stop();
+        await draftTail;
+        return await operation();
+      } finally {
+        currentUi.busy = null;
+        publishUi();
+        if (!disposed) startIntervals();
+      }
+    })();
+    // Cleanup must also wait for service-level restarts at the end of an import.
+    exclusiveWork = result.then(() => {}, () => {});
+    return result;
   }
   async function importFile(file: File) {
     const bytes = await readFile(file);
@@ -205,18 +213,25 @@ export const createEditorStores: CreateEditorStores = ({ storage, services, form
       unsubscribe = services.snapshot.subscribe(snapshots => snapshotsStore.set(immutable(snapshots)));
       startIntervals();
     }),
-    dispose: () => asyncCommand(async () => {
-      gate();
+    dispose: () => {
+      if (disposal) return disposal;
       disposed = true;
-      try {
-        await services.autosave.flush();
-        await draftTail;
-      } finally {
-        await services.snapshot.stop();
-        unsubscribe?.();
-        unsubscribe = null;
-      }
-    }),
+      disposal = asyncCommand(async () => {
+        try {
+          await services.autosave.flush();
+          await draftTail;
+        } finally {
+          await exclusiveWork;
+          try {
+            await services.snapshot.stop();
+          } finally {
+            unsubscribe?.();
+            unsubscribe = null;
+          }
+        }
+      });
+      return disposal;
+    },
     select: (tab, index) => sync(() => {
       gate();
       if (currentDraft) return false;

@@ -133,6 +133,19 @@ describe('risum preservation', () => {
 describe('charx', () => {
   const codec = formats.registry.charx;
 
+  test('compresses large text entries without changing their uncompressed bytes', () => {
+    const files = unzipSync(fixture('sample-no-module.charx'));
+    files['notes/large.txt'] = strToU8('반복되는 긴 텍스트와 알 수 없는 ZIP 항목을 그대로 보존해요.\n'.repeat(4096));
+    const stored = zipSync(files, { level: 0 });
+    const parsed = codec.parse(stored, 'large.charx');
+    const built = codec.build(parsed.doc, parsed.preserved);
+    expect(built.byteLength).toBeLessThan(stored.byteLength);
+    expect(unzipSync(built)['notes/large.txt']).toEqual(files['notes/large.txt']);
+    const reparsed = codec.parse(built, 'large.charx');
+    expect(reparsed.doc).toEqual(parsed.doc);
+    expect(reparsed.preserved.entries).toEqual(parsed.preserved.entries);
+  });
+
   test('native CCv3 entries are editable without synthesizing module.risum', () => {
     const parsed = codec.parse(fixture('sample-no-module.charx'), 'native.charx');
     expect(parsed.doc.module).toBeNull();

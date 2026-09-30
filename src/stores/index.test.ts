@@ -296,6 +296,59 @@ describe('import, export, restore and busy gating', () => {
     expect(record().dirty).toBe(true);
   });
 
+  it('disposes during a busy export, awaits saves and export, and never restarts intervals', async () => {
+    const ctx = await setup();
+    const saveStarted = deferred<void>();
+    const pendingSave = deferred<void>();
+    const downloadStarted = deferred<void>();
+    const pendingDownload = deferred<void>();
+    const originalPut = ctx.storage.putWorkspace;
+    vi.mocked(ctx.storage.putWorkspace).mockImplementationOnce(async value => {
+      saveStarted.resolve();
+      await pendingSave.promise;
+      await originalPut(value);
+    });
+    ctx.download.mockImplementationOnce(async () => {
+      downloadStarted.resolve();
+      await pendingDownload.promise;
+    });
+    const flush = vi.spyOn(ctx.services.autosave, 'flush');
+    const stop = vi.spyOn(ctx.services.snapshot, 'stop');
+    const start = vi.spyOn(ctx.services.snapshot, 'start');
+
+    stores.updateItem(address, entry('exported edit'));
+    const exporting = stores.exportFile();
+    expect(get(stores.ui).busy).toBe('export');
+    const disposing = stores.dispose();
+    expect(stores.dispose()).toBe(disposing);
+    let finished = false;
+    void disposing.then(() => { finished = true; });
+    try {
+      await saveStarted.promise;
+      expect(finished).toBe(false);
+      expect(() => stores.updateItem(address, entry('too late'))).toThrow('disposed');
+      await expect(stores.requestImport(file())).rejects.toThrow('disposed');
+      pendingSave.resolve();
+      await downloadStarted.promise;
+      expect((await ctx.storage.getWorkspace())?.doc).toMatchObject({ book: { data: [entry('exported edit')] } });
+      expect(finished).toBe(false);
+    } finally {
+      pendingSave.resolve();
+      pendingDownload.resolve();
+      await exporting;
+      await disposing;
+    }
+    expect(flush).toHaveBeenCalled();
+    expect(stop).toHaveBeenCalledTimes(2);
+    expect(start).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(get(stores.ui).busy).toBeNull();
+    const snapshots = get(stores.snapshots);
+    await ctx.services.snapshot.take(workspace(), 'manual');
+    expect(get(stores.snapshots)).toEqual(snapshots);
+    expect(await ctx.storage.listSnapshots()).toHaveLength(snapshots.length + 1);
+  });
+
   it('validates settings, enforces retention immediately, refreshes snapshots, and manages ordinary dialogs', async () => {
     const ctx = await setup();
     await expect(stores.updateSettings({ snapshotLimitMB: 0 })).rejects.toThrow('Invalid settings');

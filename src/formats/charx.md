@@ -54,6 +54,8 @@ payload에는 JPEG 접두부, 원래 이름의 기타 ZIP 항목, 중첩 module�
 
 module 있는 카드는 RisuAI `characterCards.ts` 1571~1600행의 변환을 따라 keys·secondary_keys·확률·캐시·대소문자 설정 등을 entries에 다시 반영해요. 카드와 책의 다른 필드는 복사본에서 그대로 유지하고 원본 입력은 바꾸지 않아요. module 로어북이 비어 있고 원래 책이 없었다면 책을 불필요하게 만들지 않아요.
 
+내보낼 때 일반 항목은 deflate 레벨 6으로 압축해요. `card.json`, `module.risum`, 기타 텍스트 파일도 여기에 포함돼요. 이미 압축된 형식은 확장자를 대소문자 구분 없이 확인해 stored 방식으로 넣어요: png, jpg/jpeg, webp, gif, avif, mp3, ogg, opus, flac, aac, m4a, mp4, m4v, webm, zip, gz, bz2, xz, 7z, rar, woff2예요. 이 선택은 ZIP 크기와 CPU 사용량만 바꾸며, 압축을 푼 항목의 내용 바이트와 순서는 그대로 유지해요.
+
 기존 CCv3 항목의 알 수 없는 키와 extensions는 대응하는 Risu 항목에 남겨요. 원본 module 로어북을 provenance로 보관해서 유일한 id, 변하지 않은 항목, 유일한 key/comment 순으로 대응시켜요. 식별할 수 없는 편집은 항목 수가 같은 경우 원래 위치를 사용해요. id 없는 항목을 동시에 크게 바꾸고 재배열하면 대응을 확정할 수 없으므로 UI는 기존 id를 보존해야 해요.
 
 카드의 assets와 Risu 확장의 emotions·additionalAssets·vits 참조 및 module의 에셋 참조를 원본과 비교해 변경을 거부해요. module의 존재 여부도 바꿀 수 없어요. 파일을 다른 문서 종류로 바꾸려면 새로 가져와야 해요.
